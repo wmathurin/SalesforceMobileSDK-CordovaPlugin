@@ -3,13 +3,13 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android"
         id="com.salesforce"
-        version="7.1.0">
+        version="7.2.0">
 
   <name>SalesforceMobileSDK Plugins</name>
   <description>SalesforceMobileSDK Plugins</description>
   <license>Apache 2.0</license>
   <keywords>salesforce,oauth,smartstore,smartsync</keywords>
-  <repo>https://github.com/forcedotcom/SalesforceMobileSDK-CordovaPlugin</repo>
+  <repo>https://github.com/wmathurin/SalesforceMobileSDK-CordovaPlugin</repo>
 
   <js-module src="www/com.salesforce.plugin.oauth.js" name="plugin.oauth"></js-module>
   <js-module src="www/com.salesforce.plugin.network.js" name="plugin.network"></js-module>
@@ -93,15 +93,15 @@
 
     <!-- Mobile SDK frameworks pod specs -->
     <pods-config ios-min-version="11.0" use-frameworks="true" />
-    <pod name="SalesforceHybridSDK" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS-Hybrid" branch="dev" />
-    <pod name="Cordova" git="https://github.com/forcedotcom/cordova-ios" branch="cordova_5.0.0_sdk" />
-    <pod name="SmartSync" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS" branch="dev" />
-    <pod name="SmartStore" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS" branch="dev" />
+    <pod name="SalesforceHybridSDK" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS-Hybrid" branch="dev" />
+    <pod name="Cordova" git="https://github.com/wmathurin/cordova-ios" branch="cordova_5.0.0_sdk" />
+    <pod name="SmartSync" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS" branch="dev" />
+    <pod name="SmartStore" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS" branch="dev" />
     <pod name="FMDB/SQLCipher" git="https://github.com/ccgus/fmdb" tag="2.7.5" />
     <pod name="SQLCipher/fts" git="https://github.com/sqlcipher/sqlcipher" tag="v4.0.1" />
-    <pod name="SalesforceSDKCore" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS" branch="dev" />
-    <pod name="SalesforceAnalytics" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS" branch="dev" />
-    <pod name="SalesforceSDKCommon" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS" branch="dev" />
+    <pod name="SalesforceSDKCore" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS" branch="dev" />
+    <pod name="SalesforceAnalytics" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS" branch="dev" />
+    <pod name="SalesforceSDKCommon" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS" branch="dev" />
     <!--
 
       Replace 'dev' in the 'branch' tag above with the current release version tag while releasing.
@@ -109,7 +109,7 @@
       For example,
         branch="dev"
       would become
-        tag="v7.1.0"
+        tag="v7.2.0"
 
     -->
 
