@@ -109,11 +109,11 @@ update_repo ()
 }
 
 ROOT_FOLDER=$(get_root_folder)
-ANDROID_SDK_REPO_PATH="https://github.com/forcedotcom/SalesforceMobileSDK-Android.git"
+ANDROID_SDK_REPO_PATH="https://github.com/wmathurin/SalesforceMobileSDK-Android.git"
 ANDROID_SDK_FOLDER="SalesforceMobileSDK-Android"
-IOS_SDK_REPO_PATH="https://github.com/forcedotcom/SalesforceMobileSDK-iOS-Hybrid.git"
+IOS_SDK_REPO_PATH="https://github.com/wmathurin/SalesforceMobileSDK-iOS-Hybrid.git"
 IOS_SDK_FOLDER="SalesforceMobileSDK-iOS-Hybrid"
-SHARED_SDK_REPO_PATH="https://github.com/forcedotcom/SalesforceMobileSDK-Shared.git"
+SHARED_SDK_REPO_PATH="https://github.com/wmathurin/SalesforceMobileSDK-Shared.git"
 SHARED_SDK_FOLDER="SalesforceMobileSDK-Shared"
 
 update_ios_repo ()
@@ -167,8 +167,8 @@ copy_android_sdk()
     cp -RL $ANDROID_SDK_FOLDER/libs/SalesforceSDK src/android/libs/
     echo "Copying SmartStore library"
     cp -RL $ANDROID_SDK_FOLDER/libs/SmartStore src/android/libs/
-    echo "Copying SmartSync library"
-    cp -RL $ANDROID_SDK_FOLDER/libs/SmartSync src/android/libs/
+    echo "Copying MobileSync library"
+    cp -RL $ANDROID_SDK_FOLDER/libs/MobileSync src/android/libs/
     echo "Copying SalesforceHybrid library"
     cp -RL $ANDROID_SDK_FOLDER/libs/SalesforceHybrid src/android/libs/
     echo "Copying Gradle wrapper files"
