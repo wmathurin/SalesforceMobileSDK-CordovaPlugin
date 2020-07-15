@@ -108,7 +108,7 @@ public class SalesforceSDKManager {
     /**
      * Current version of this SDK.
      */
-    public static final String SDK_VERSION = "8.0.0";
+    public static final String SDK_VERSION = "8.2.0.dev";
 
     /**
      * Intent action meant for instances of SalesforceSDKManager residing in other processes
@@ -1097,6 +1097,16 @@ public class SalesforceSDKManager {
      */
     public static String encrypt(String data, String key) {
         return Encryptor.encrypt(data, key);
+    }
+
+    /**
+     * Returns the legacy encryption key. This should be called only as a means to migrate to the new key.
+     *
+     * @return Legacy encryption key.
+     * @deprecated Will be removed in Mobile SDK 10.0.
+     */
+    public static String getLegacyEncryptionKey() {
+        return SalesforceKeyGenerator.getLegacyEncryptionKey(INTERNAL_ENTROPY);
     }
 
     /**
