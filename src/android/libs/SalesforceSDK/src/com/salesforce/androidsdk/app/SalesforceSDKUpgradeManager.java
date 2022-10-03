@@ -28,15 +28,20 @@ package com.salesforce.androidsdk.app;
 
 import static com.salesforce.androidsdk.security.ScreenLockManager.MOBILE_POLICY_PREF;
 import static com.salesforce.androidsdk.security.ScreenLockManager.SCREEN_LOCK;
+import static com.salesforce.androidsdk.security.ScreenLockManager.SCREEN_LOCK_TIMEOUT;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.salesforce.androidsdk.accounts.UserAccount;
 import com.salesforce.androidsdk.accounts.UserAccountManager;
+import com.salesforce.androidsdk.auth.HttpAccess;
+import com.salesforce.androidsdk.auth.OAuth2;
 import com.salesforce.androidsdk.util.SalesforceSDKLogger;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 /**
  * This class handles upgrades from one version to another.
@@ -75,27 +80,30 @@ public class SalesforceSDKUpgradeManager {
      * version to the current version.
      */
     protected synchronized void upgradeAccMgr() {
-        String installedVersion = getInstalledAccMgrVersion();
-        if (installedVersion.equals(SalesforceSDKManager.SDK_VERSION)) {
+        String installedVersionStr = getInstalledAccMgrVersion();
+        if (installedVersionStr.equals(SalesforceSDKManager.SDK_VERSION)) {
             return;
         }
 
         // Update shared preference file to reflect the latest version.
         writeCurVersion(ACC_MGR_KEY, SalesforceSDKManager.SDK_VERSION);
 
-        /*
-         * If the installed version < v7.1.0, we need to store the current
-         * user's user ID and org ID in a shared preference file, to
-         * support fast user switching.
-         */
         try {
-            final String majorVersionNum = installedVersion.substring(0, 3);
-            double installedVerDouble = Double.parseDouble(majorVersionNum);
-            if (installedVerDouble < 9.2) {
-                upgradeTo9Dot2();
+            final SdkVersion installedVersion = SdkVersion.parseFromString(installedVersionStr);
+            if (installedVersion.isLessThan(new SdkVersion(9, 2, 0, false))) {
+                upgradeFromBefore9_2_0To10_1_1PasscodeFixes();
+            }
+            // Already incorporated into 9.2 upgrade.
+            else if (installedVersion.isGreaterThanOrEqualTo(new SdkVersion(9, 2, 0, false))
+                    && installedVersion.isLessThan(new SdkVersion(10, 2, 0, false))
+            ) {
+                upgradeFromVersions9_2_0Thru10_1_1To10_1_1PasscodeFixes();
             }
         } catch (Exception e) {
-            SalesforceSDKLogger.e(TAG, "Failed to parse installed version.");
+            SalesforceSDKLogger.e(
+                    TAG,
+                    "Failed to parse installed version. Error message: " + e.getMessage()
+            );
         }
     }
 
@@ -131,7 +139,7 @@ public class SalesforceSDKUpgradeManager {
     }
 
     // TODO: Remove upgrade step in Mobile SDK 11.0
-    private void upgradeTo9Dot2() {
+    private void upgradeFromBefore9_2_0To10_1_1PasscodeFixes() {
         final String KEY_PASSCODE ="passcode";
         final String KEY_TIMEOUT = "access_timeout";
         final String KEY_PASSCODE_LENGTH = "passcode_length";
@@ -146,8 +154,10 @@ public class SalesforceSDKUpgradeManager {
         if (globalPrefs.contains(KEY_TIMEOUT) && globalPrefs.contains(KEY_PASSCODE_LENGTH)) {
             SharedPreferences.Editor globalEditor = globalPrefs.edit();
             // Check that Passcode was enabled
-            if (globalPrefs.getInt(KEY_TIMEOUT, 0) != 0) {
+            int timeout = globalPrefs.getInt(KEY_TIMEOUT, 0);
+            if (timeout != 0) {
                 globalEditor.putBoolean(SCREEN_LOCK, true);
+                globalEditor.putInt(SCREEN_LOCK_TIMEOUT, timeout);
             }
 
             globalEditor.remove(KEY_PASSCODE);
@@ -170,11 +180,12 @@ public class SalesforceSDKUpgradeManager {
                             + account.getOrgLevelFilenameSuffix(), Context.MODE_PRIVATE);
                     if (orgPrefs.contains(KEY_TIMEOUT) && orgPrefs.contains(KEY_PASSCODE_LENGTH)) {
                         // Check that Passcode was enabled
-                        if (orgPrefs.getInt(KEY_TIMEOUT, 0) != 0) {
+                        int userTimeout = orgPrefs.getInt(KEY_TIMEOUT, 0);
+                        if (userTimeout != 0) {
                             // Set screen lock key at user level
                             final SharedPreferences userPrefs = ctx.getSharedPreferences(MOBILE_POLICY_PREF
                                     + account.getUserLevelFilenameSuffix(), Context.MODE_PRIVATE);
-                            userPrefs.edit().putBoolean(SCREEN_LOCK, true).apply();
+                            userPrefs.edit().putBoolean(SCREEN_LOCK, true).putInt(SCREEN_LOCK_TIMEOUT, userTimeout).apply();
                         }
 
                         // Delete passcode keys at org level
@@ -190,6 +201,50 @@ public class SalesforceSDKUpgradeManager {
                         orgEditor.apply();
                     }
                 }
+            }
+        }
+    }
+
+    // TODO: Remove upgrade step in Mobile SDK 12.0
+    private void upgradeFromVersions9_2_0Thru10_1_1To10_1_1PasscodeFixes() {
+        final Context ctx = SalesforceSDKManager.getInstance().getAppContext();
+        final SharedPreferences globalPrefs = ctx.getSharedPreferences(MOBILE_POLICY_PREF, Context.MODE_PRIVATE);
+        if (globalPrefs.contains(SCREEN_LOCK)) {
+            final UserAccountManager manager = SalesforceSDKManager.getInstance().getUserAccountManager();
+            final List<UserAccount> accounts = manager.getAuthenticatedUsers();
+            if (accounts != null) {
+                HttpAccess.init(ctx); // only needed because we need to hit the network for this upgrade step.
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    int lowestTimeout = Integer.MAX_VALUE;
+
+                    // Get and set connected app mobile policy timeout per user.
+                    for (UserAccount account : accounts) {
+                        try {
+                            final OAuth2.IdServiceResponse response = OAuth2.callIdentityService(HttpAccess.DEFAULT,
+                                    account.getIdUrl(), account.getAuthToken());
+
+                            if (response.mobilePolicy && response.screenLockTimeout != -1) {
+                                final SharedPreferences userPrefs = ctx.getSharedPreferences(MOBILE_POLICY_PREF
+                                        + account.getUserLevelFilenameSuffix(), Context.MODE_PRIVATE);
+                                int timeoutInMills = response.screenLockTimeout * 1000 * 60;
+                                userPrefs.edit().putInt(SCREEN_LOCK_TIMEOUT, timeoutInMills).apply();
+
+                                if (lowestTimeout == Integer.MAX_VALUE || timeoutInMills < lowestTimeout) {
+                                    lowestTimeout = timeoutInMills;
+                                }
+                            }
+                        } catch (IOException e) {
+                            SalesforceSDKLogger.e(TAG, "Exception throw retrieving mobile policy", e);
+                        }
+                    }
+
+                    // Set timeout or remove block.
+                    if (lowestTimeout < Integer.MAX_VALUE && lowestTimeout > 0) {
+                        globalPrefs.edit().putInt(SCREEN_LOCK_TIMEOUT, lowestTimeout).apply();
+                    } else {
+                        globalPrefs.edit().remove(SCREEN_LOCK).apply();
+                    }
+                });
             }
         }
     }
