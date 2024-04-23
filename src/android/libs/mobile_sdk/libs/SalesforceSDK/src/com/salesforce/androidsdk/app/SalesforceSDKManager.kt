@@ -199,7 +199,7 @@ open class SalesforceSDKManager protected constructor(
      */
     private var showDeveloperSupportBroadcastIntentReceiver: BroadcastReceiver? = null
 
-    val webviewLoginActivityClass: Class<out Activity> = loginActivity ?: LoginActivity::class.java
+    internal val webviewLoginActivityClass: Class<out Activity> = loginActivity ?: LoginActivity::class.java
 
     /**
      * The class of the activity used to perform the login process and create
@@ -346,9 +346,8 @@ open class SalesforceSDKManager protected constructor(
     /**
      * Optionally, enables the hybrid authentication flow.  Defaults to true
      */
-    @get:JvmName("shouldUseHybridAuthentication")
-    @set:Synchronized
-    var useHybridAuthentication = true
+    @Synchronized
+    fun shouldUseHybridAuthentication() = true
 
     /**
      * The regular expression pattern used to detect "Use Custom Domain" input
@@ -564,7 +563,6 @@ open class SalesforceSDKManager protected constructor(
      * license
      * @return The Native Login Manager.
      */
-    @Suppress("unused")
     fun useNativeLogin(
         consumerKey: String,
         callbackUrl: String,
@@ -1400,12 +1398,12 @@ open class SalesforceSDKManager protected constructor(
      * Determines whether the device has a compact screen.
      * Taken directly from https://developer.android.com/guide/topics/large-screens/large-screen-cookbook#kotlin
      */
-    fun compactScreen(activity: Activity): Boolean {
+    fun compactScreen(activity: Activity) : Boolean {
         val metrics = WindowMetricsCalculator.getOrCreate().computeMaximumWindowMetrics(activity)
         val width = metrics.bounds.width()
         val height = metrics.bounds.height()
         val density = activity.resources.displayMetrics.density
-        val windowSizeClass = WindowSizeClass.compute(width / density, height / density)
+        val windowSizeClass = WindowSizeClass.compute(width/density, height/density)
 
         return windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.COMPACT ||
                 windowSizeClass.windowHeightSizeClass == WindowHeightSizeClass.COMPACT
@@ -1444,7 +1442,6 @@ open class SalesforceSDKManager protected constructor(
          * TODO: Remove the suppress lint annotation once the Android context is no longer retained.
          */
         @JvmField
-        @SuppressLint("StaticFieldLeak")
         protected var INSTANCE: SalesforceSDKManager? = null
 
         /** The current version of this SDK */
@@ -1751,7 +1748,8 @@ open class SalesforceSDKManager protected constructor(
             withTimeout(5000L) {
                 val loginServer = loginServerManager.selectedLoginServer?.url?.trim { it <= ' ' } ?: return@withTimeout
 
-                if (loginServer == PRODUCTION_LOGIN_URL || loginServer == SANDBOX_LOGIN_URL || !isHttpsUrl(loginServer) || loginServer.toHttpUrlOrNull() == null) {
+                if (loginServer == PRODUCTION_LOGIN_URL || loginServer == SANDBOX_LOGIN_URL || !isHttpsUrl(loginServer) || loginServer.toHttpUrlOrNull() == null
+                ) {
                     setBrowserLoginEnabled(
                         browserLoginEnabled = false,
                         shareBrowserSessionEnabled = false

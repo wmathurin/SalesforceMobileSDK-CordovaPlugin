@@ -106,7 +106,7 @@ import com.salesforce.androidsdk.rest.ClientManager.LoginOptions.fromBundleWithS
 import com.salesforce.androidsdk.security.BiometricAuthenticationManager
 import com.salesforce.androidsdk.security.BiometricAuthenticationManager.Companion.SHOW_BIOMETRIC
 import com.salesforce.androidsdk.ui.OAuthWebviewHelper.OAuthWebviewHelperEvents
-import com.salesforce.androidsdk.util.AuthConfigUtil.AUTH_CONFIG_COMPLETE_INTENT_ACTION
+import com.salesforce.androidsdk.ui.ServerPickerActivity.CHANGE_SERVER_INTENT
 import com.salesforce.androidsdk.util.EventsObservable
 import com.salesforce.androidsdk.util.EventsObservable.EventType.AuthWebViewCreateComplete
 import com.salesforce.androidsdk.util.EventsObservable.EventType.LoginActivityCreateComplete
@@ -114,7 +114,7 @@ import com.salesforce.androidsdk.util.SalesforceSDKLogger.d
 import com.salesforce.androidsdk.util.SalesforceSDKLogger.e
 import com.salesforce.androidsdk.util.UriFragmentParser.parse
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import com.salesforce.androidsdk.R.layout.sf__login as sf__login_layout
 import com.salesforce.androidsdk.R.menu.sf__login as sf__login_menu
@@ -134,7 +134,7 @@ open class LoginActivity : AppCompatActivity(), OAuthWebviewHelperEvents {
 
     private var webviewHelper: OAuthWebviewHelper? = null
 
-    private var authConfigReceiver: AuthConfigReceiver? = null
+    private var changeServerReceiver: ChangeServerReceiver? = null
 
     private var receiverRegistered = false
 
@@ -197,6 +197,7 @@ open class LoginActivity : AppCompatActivity(), OAuthWebviewHelperEvents {
             useWideViewPort = true
             layoutAlgorithm = LayoutAlgorithm.NORMAL
             javaScriptEnabled = true
+            allowFileAccessFromFileURLs = true
             javaScriptCanOpenWindowsAutomatically = true
             databaseEnabled = true
             domStorageEnabled = true
@@ -216,11 +217,11 @@ open class LoginActivity : AppCompatActivity(), OAuthWebviewHelperEvents {
         )
         certAuthOrLogin()
         if (!receiverRegistered) {
-            authConfigReceiver = AuthConfigReceiver().also { changeServerReceiver ->
+            changeServerReceiver = ChangeServerReceiver().also { changeServerReceiver ->
                 registerReceiver(
                     this,
                     changeServerReceiver,
-                    IntentFilter(AUTH_CONFIG_COMPLETE_INTENT_ACTION),
+                    IntentFilter(CHANGE_SERVER_INTENT),
                     ContextCompat.RECEIVER_NOT_EXPORTED
                 )
             }
@@ -241,7 +242,7 @@ open class LoginActivity : AppCompatActivity(), OAuthWebviewHelperEvents {
 
     override fun onDestroy() {
         if (receiverRegistered) {
-            unregisterReceiver(authConfigReceiver)
+            unregisterReceiver(changeServerReceiver)
             receiverRegistered = false
         }
         super.onDestroy()
@@ -253,13 +254,14 @@ open class LoginActivity : AppCompatActivity(), OAuthWebviewHelperEvents {
         // If the intent is a callback from Chrome, process it and do nothing else
         if (isChromeCallback(intent)) {
             completeAuthFlow(intent)
-            webviewHelper?.clearView()
             return
         }
 
         // Reload the login page for every new intent to ensure the correct login server is selected
         webviewHelper?.run {
-            loadLoginPage()
+            if (shouldReloadPage) {
+                loadLoginPage()
+            }
         }
     }
 
@@ -345,7 +347,15 @@ open class LoginActivity : AppCompatActivity(), OAuthWebviewHelperEvents {
 
     override fun onResume() {
         super.onResume()
-        wasBackgrounded = false
+        if (wasBackgrounded) {
+            webviewHelper?.run {
+                if (shouldReloadPage) {
+                    clearView()
+                    loadLoginPage()
+                }
+            }
+            wasBackgrounded = false
+        }
     }
 
     public override fun onSaveInstanceState(bundle: Bundle) {
@@ -546,9 +556,9 @@ open class LoginActivity : AppCompatActivity(), OAuthWebviewHelperEvents {
         }
     }
 
-    inner class AuthConfigReceiver : BroadcastReceiver() {
+    inner class ChangeServerReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
-            if (intent?.action == AUTH_CONFIG_COMPLETE_INTENT_ACTION) {
+            if (intent?.action == CHANGE_SERVER_INTENT) {
                 webviewHelper?.loadLoginPage()
             }
         }
@@ -607,12 +617,11 @@ open class LoginActivity : AppCompatActivity(), OAuthWebviewHelperEvents {
 
                 override fun onAuthenticationSucceeded(result: AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    (SalesforceSDKManager.getInstance().biometricAuthenticationManager
-                            as? BiometricAuthenticationManager?)?.run {
-                        onUnlock()
+                    (SalesforceSDKManager.getInstance().biometricAuthenticationManager as? BiometricAuthenticationManager?)?.run {
+                        locked = false
                     }
 
-                    CoroutineScope(IO).launch {
+                    CoroutineScope(Main).launch {
                         doTokenRefresh(this@LoginActivity)
                     }
                 }
