@@ -26,6 +26,7 @@
  */
 package com.salesforce.androidsdk.phonegap.ui
 
+import android.net.Uri.parse
 import android.os.Bundle
 import android.view.KeyEvent
 import android.webkit.URLUtil.isHttpsUrl
@@ -56,11 +57,7 @@ import com.salesforce.androidsdk.util.AuthConfigUtil.MyDomainAuthConfig
 import com.salesforce.androidsdk.util.AuthConfigUtil.getMyDomainAuthConfig
 import com.salesforce.androidsdk.util.EventsObservable
 import com.salesforce.androidsdk.util.EventsObservable.EventType.GapWebViewCreateComplete
-import com.salesforce.androidsdk.util.SalesforceSDKLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.apache.cordova.CallbackContext
 import org.apache.cordova.CordovaActivity
@@ -584,26 +581,21 @@ open class SalesforceDroidGapActivity : CordovaActivity(), SalesforceActivityInt
     }
 
     private fun doAuthConfig() {
-        CoroutineScope(Default).launch {
-            runCatching {
-                withTimeout(5000L) {
-                    val loginServer = SalesforceHybridSDKManager
-                        .getInstance()
-                        .loginServerManager
-                        .selectedLoginServer
-                        ?.url
-                        ?.trim { it <= ' ' } ?: return@withTimeout
+        val loginServer = SalesforceHybridSDKManager
+            .getInstance()
+            .loginServerManager
+            .selectedLoginServer
+            ?.url
+            ?.trim { it <= ' ' } ?: return
 
-                    if (loginServer == PRODUCTION_LOGIN_URL || loginServer == SANDBOX_LOGIN_URL || !isHttpsUrl(loginServer) || loginServer.toHttpUrlOrNull() == null) {
-                        return@withTimeout
-                    }
-
-                    authConfig = getMyDomainAuthConfig(loginServer)
-                }
-            }.onFailure { e ->
-                SalesforceSDKLogger.e(TAG, "Exception occurred while fetching authentication configuration", e)
-            }
+        if (loginServer == PRODUCTION_LOGIN_URL || loginServer == SANDBOX_LOGIN_URL || !isHttpsUrl(loginServer) || parse(loginServer) == null
+        ) {
+            return
         }
+
+        authConfig = getMyDomainAuthConfig(loginServer)
+
+        return
     }
 
     companion object {
