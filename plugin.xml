@@ -9,7 +9,7 @@
   <description>SalesforceMobileSDK Plugins</description>
   <license>Apache 2.0</license>
   <keywords>salesforce,oauth,smartstore,mobilesync</keywords>
-  <repo>https://github.com/forcedotcom/SalesforceMobileSDK-CordovaPlugin</repo>
+  <repo>https://github.com/wmathurin/SalesforceMobileSDK-CordovaPlugin</repo>
 
   <js-module src="www/com.salesforce.plugin.oauth.js" name="plugin.oauth"></js-module>
   <js-module src="www/com.salesforce.plugin.network.js" name="plugin.network"></js-module>
@@ -94,12 +94,12 @@
              <source url="https://cdn.cocoapods.org"/>
          </config>
          <pods use-frameworks="true">
-           <pod name="SalesforceHybridSDK" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS-Hybrid" tag="v13.0.2" />
-           <pod name="MobileSync" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS" tag="v13.0.2" />
-           <pod name="SmartStore" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS" tag="v13.0.2" />
-           <pod name="SalesforceSDKCore" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS" tag="v13.0.2" />
-           <pod name="SalesforceAnalytics" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS" tag="v13.0.2" />
-           <pod name="SalesforceSDKCommon" git="https://github.com/forcedotcom/SalesforceMobileSDK-iOS" tag="v13.0.2" />
+           <pod name="SalesforceHybridSDK" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS-Hybrid" tag="v13.0.2" />
+           <pod name="MobileSync" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS" tag="v13.0.2" />
+           <pod name="SmartStore" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS" tag="v13.0.2" />
+           <pod name="SalesforceSDKCore" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS" tag="v13.0.2" />
+           <pod name="SalesforceAnalytics" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS" tag="v13.0.2" />
+           <pod name="SalesforceSDKCommon" git="https://github.com/wmathurin/SalesforceMobileSDK-iOS" tag="v13.0.2" />
            <!-- Needed until cordova-ios gets posted to cocoapod.org -->
            <pod name="Cordova" git="https://github.com/apache/cordova-ios" tag="7.1.1" />
          </pods>
