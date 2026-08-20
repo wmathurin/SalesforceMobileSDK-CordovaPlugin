@@ -5,16 +5,16 @@ set -e   # stop at first error
 
 OPT_BRANCH=""
 OPT_OS=""
-OPT_IOS_HYBRID_ORG="forcedotcom"
-OPT_ANDROID_ORG="forcedotcom"
+OPT_IOS_HYBRID_ORG="wmathurin"
+OPT_ANDROID_ORG="wmathurin"
 
 usage ()
 {
     echo "usage: $0 -b <branch name> -o <os name> [-i <ios_hybrid_org>] [-a <android_org>]"
     echo "  Where <branch name> is the branch to update to."
     echo "  Where <os name> is the name of the platform to update."
-    echo "  Where <ios_hybrid_org> is the GitHub org for iOS-Hybrid repo (default: forcedotcom)."
-    echo "  Where <android_org> is the GitHub org for Android repo (default: forcedotcom)."
+    echo "  Where <ios_hybrid_org> is the GitHub org for iOS-Hybrid repo (default: wmathurin)."
+    echo "  Where <android_org> is the GitHub org for Android repo (default: wmathurin)."
 }
 
 parse_opts ()
