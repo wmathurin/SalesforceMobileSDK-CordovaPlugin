@@ -353,6 +353,26 @@ class LoginViewActivityTest {
     }
 
     @Test
+    fun test_givenOnLoginForAdminsIsNull_whenDropdownMenuOpened_thenLoginForAdminsItemIsAbsent() {
+        androidComposeTestRule.setContent {
+            DefaultTopAppBarTestWrapper(
+                onLoginForAdmins = null,
+            )
+        }
+
+        val menu = androidComposeTestRule.onNodeWithContentDescription(
+            androidComposeTestRule.activity.getString(R.string.sf__more_options)
+        )
+        val loginForAdminsButton = androidComposeTestRule.onNodeWithText(
+            androidComposeTestRule.activity.getString(R.string.sf__login_for_admins)
+        )
+
+        menu.assertIsDisplayed()
+        menu.performClick()
+        loginForAdminsButton.assertDoesNotExist()
+    }
+
+    @Test
     fun bottomAppBar_WithNoButton_DisplaysCorrectly() {
         androidComposeTestRule.setContent {
             DefaultBottomAppBarTestWrapper()
@@ -482,6 +502,74 @@ class LoginViewActivityTest {
         button.assertIsDisplayed()
     }
 
+    @Test
+    fun loginView_ServerPickerShown_HidesMenuButton() {
+        val dynamicBackgroundColor = mutableStateOf(White)
+        val showServerPicker = mutableStateOf(true)
+        androidComposeTestRule.setContent {
+            LoginViewTestWrapper(
+                dynamicBackgroundColor = dynamicBackgroundColor,
+                topAppBar = {
+                    DefaultTopAppBarTestWrapper(showServerPicker = showServerPicker)
+                },
+                loading = false,
+                showServerPicker = showServerPicker,
+            )
+        }
+
+        val menu = androidComposeTestRule.onNodeWithContentDescription(
+            androidComposeTestRule.activity.getString(R.string.sf__more_options)
+        )
+        menu.assertDoesNotExist()
+    }
+
+    @Test
+    fun loginView_ServerPickerShown_HidesBackButton() {
+        val dynamicBackgroundColor = mutableStateOf(White)
+        val showServerPicker = mutableStateOf(true)
+        androidComposeTestRule.setContent {
+            LoginViewTestWrapper(
+                dynamicBackgroundColor = dynamicBackgroundColor,
+                topAppBar = {
+                    // shouldShowBackButton = true, but the picker is shown, so the back button
+                    // must still be hidden.
+                    DefaultTopAppBarTestWrapper(
+                        showServerPicker = showServerPicker,
+                        shouldShowBackButton = true,
+                    )
+                },
+                loading = false,
+                showServerPicker = showServerPicker,
+            )
+        }
+
+        val backButton = androidComposeTestRule.onNodeWithContentDescription(
+            androidComposeTestRule.activity.getString(R.string.sf__back_button_content_description)
+        )
+        backButton.assertDoesNotExist()
+    }
+
+    @Test
+    fun loginView_ServerPickerShown_HidesLoadingIndicator() {
+        val dynamicBackgroundColor = mutableStateOf(White)
+        val showServerPicker = mutableStateOf(true)
+        androidComposeTestRule.setContent {
+            LoginViewTestWrapper(
+                dynamicBackgroundColor = dynamicBackgroundColor,
+                topAppBar = {
+                    DefaultTopAppBarTestWrapper(showServerPicker = showServerPicker)
+                },
+                loading = true,
+                showServerPicker = showServerPicker,
+            )
+        }
+
+        val loadingIndicator = androidComposeTestRule.onNodeWithContentDescription(
+            androidComposeTestRule.activity.getString(R.string.sf__loading_indicator)
+        )
+        loadingIndicator.assertIsNotDisplayed()
+    }
+
     // test (not) loading
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -540,7 +628,7 @@ class LoginViewActivityTest {
         shouldShowBackButton: Boolean = false,
         showDevSupport: (() -> Unit)? = { },
         finish: () -> Unit = { },
-        onLoginForAdmins: (() -> Unit) = { },
+        onLoginForAdmins: (() -> Unit)? = { },
     ) {
         DefaultTopAppBar(
             backgroundColor, titleText, titleTextColor, showServerPicker, clearCookies,
