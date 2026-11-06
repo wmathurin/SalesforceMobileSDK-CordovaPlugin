@@ -89,16 +89,16 @@ update_repo ()
 ROOT_FOLDER=$(get_root_folder)
 ANDROID_SDK_FOLDER="SalesforceMobileSDK-Android"
 IOS_HYBRID_SDK_FOLDER="SalesforceMobileSDK-iOS-Hybrid"
-IOS_SDK_REPO_PATH="https://github.com/wmathurin/SalesforceMobileSDK-iOS.git"
+IOS_SDK_REPO_PATH="https://github.com/forcedotcom/SalesforceMobileSDK-iOS.git"
 IOS_SDK_FOLDER="SalesforceMobileSDK-iOS"
-SHARED_SDK_REPO_PATH="https://github.com/wmathurin/SalesforceMobileSDK-Shared.git"
+SHARED_SDK_REPO_PATH="https://github.com/forcedotcom/SalesforceMobileSDK-Shared.git"
 SHARED_SDK_FOLDER="SalesforceMobileSDK-Shared"
 
 update_ios_repo ()
 {
     update_repo "${IOS_HYBRID_SDK_FOLDER}" "${IOS_HYBRID_SDK_REPO_PATH}"
     # iOS SDK is always cloned at dev since it is not branched for plugin upgrades
-    update_repo "${IOS_SDK_FOLDER}" "${IOS_SDK_REPO_PATH}" "dev141"
+    update_repo "${IOS_SDK_FOLDER}" "${IOS_SDK_REPO_PATH}" "dev"
     cd ${ROOT_FOLDER}
 }
 
@@ -189,7 +189,7 @@ then
     update_android_repo
 fi
 # Shared is always cloned at dev since it is not branched for plugin upgrades
-update_repo "${SHARED_SDK_FOLDER}" "${SHARED_SDK_REPO_PATH}" "dev141"
+update_repo "${SHARED_SDK_FOLDER}" "${SHARED_SDK_REPO_PATH}" "dev"
 
 cd ${ROOT_FOLDER}
 echo "*** Creating directories ***"
